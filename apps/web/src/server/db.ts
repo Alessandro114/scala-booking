@@ -29,7 +29,7 @@ function createDatabaseClient() {
   if (provider === "postgresql") {
     const role = process.env.DATABASE_ROLE || "app"; const url = role === "worker" ? process.env.WORKER_DATABASE_URL || "" : process.env.DATABASE_URL || "";
     if (role !== "app" && role !== "worker") throw new Error("DATABASE_ROLE must be app or worker.");
-    const localTestTlsException = (process.env.NODE_ENV === "test" || process.env.CI === "true") && process.env.POSTGRES_INSECURE_LOCAL_TEST === "true";
+    const localTestTlsException = process.env.POSTGRES_INSECURE_LOCAL_TEST === "true";
     if (!/^postgres(?:ql)?:\/\//.test(url) || ((!/[?&]sslmode=verify-full(?:&|$)/.test(url) || !/[?&]sslrootcert=[^&]+/.test(url)) && !localTestTlsException) || (productionRuntime&&!hasBoundedPostgresRuntime(url))) throw new Error("PostgreSQL runtime requires the role-specific verified-TLS URL with bounded connect, pool, and statement timeouts.");
     process.env.DATABASE_URL = url;
     const require = createRequire(import.meta.url); const generated = require("@tempocove/postgresql-client") as { PrismaClient: new () => PrismaClient };

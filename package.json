@@ -1,14 +1,14 @@
 {
-  "name": "snagtime",
+  "name": "scala-booking",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nateherkai/snagtime.git"
+    "url": "https://github.com/Alessandro114/scala-booking.git"
   },
-  "bugs": "https://github.com/nateherkai/snagtime/issues",
-  "homepage": "https://github.com/nateherkai/snagtime#readme",
+  "bugs": "https://github.com/Alessandro114/scala-booking/issues",
+  "homepage": "https://github.com/Alessandro114/scala-booking#readme",
   "type": "module",
   "workspaces": [
     "apps/*"
