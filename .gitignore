@@ -8,6 +8,7 @@ apps/web/next-env.d.ts
 .env
 .env.local
 .env.*.local
+.env.local.tmp
 !.env.example
 prisma/*.db
 prisma/*.db-journal
