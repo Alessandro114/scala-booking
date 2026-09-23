@@ -498,7 +498,7 @@ export async function disconnectGoogleCalendar(userId: string, revoke: (token: s
     return { id: fenced.id, credentialUserId: fenced.userId, token: decryptToken(fenced.refreshToken) || decryptToken(fenced.accessToken), leaseToken };
   });
   if (!claimed) {
-    if (environmentGoogleCredentialAllowed(resolvedWorkspaceId)) throw new AppError("ENV_CREDENTIAL_MANAGED_EXTERNALLY", "The environment-provided Google credential must be revoked outside SnagTime.", 409);
+    if (environmentGoogleCredentialAllowed(resolvedWorkspaceId)) throw new AppError("ENV_CREDENTIAL_MANAGED_EXTERNALLY", "The environment-provided Google credential must be revoked outside SCALA Booking.", 409);
     return { disconnected: true as const };
   }
   clearGoogleScopeHealthCache(resolvedWorkspaceId);

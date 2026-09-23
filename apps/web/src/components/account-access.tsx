@@ -27,7 +27,7 @@ function GenericRequestForm({ kind }: { kind: "password" | "verification" }) {
     } catch (reason) { setError(reason instanceof Error ? reason.message : "The request could not be accepted."); }
     finally { setWorking(false); }
   };
-  if (accepted) return <div className="recovery-result" role="status" aria-live="polite"><strong>Request accepted</strong><p>If the address is eligible, SnagTime will make instructions available through its configured email provider. This page does not confirm an account or delivery.</p><Link className="button button-primary" href="/dashboard">Return to sign in</Link></div>;
+  if (accepted) return <div className="recovery-result" role="status" aria-live="polite"><strong>Request accepted</strong><p>If the address is eligible, SCALA Booking will make instructions available through its configured email provider. This page does not confirm an account or delivery.</p><Link className="button button-primary" href="/dashboard">Return to sign in</Link></div>;
   return <form onSubmit={submit}><label>Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></label>{error && <div className="form-error" role="alert" aria-live="assertive">{error}</div>}<button className="button button-primary" type="submit" disabled={working || !email.includes("@")}>{working ? "Submitting…" : kind === "password" ? "Request reset instructions" : "Request verification instructions"}</button></form>;
 }
 
@@ -120,7 +120,7 @@ export function AcceptInvitationView() {
     catch (reason) { setError(reason instanceof Error ? reason.message : "Sign in failed."); setStatus("login"); }
   };
   if (status === "working") return <AccessFrame eyebrow="Workspace invitation" title="Checking your invitation" description="The one-time authority has been removed from the browser address."><div className="sync-note" role="status"><span className="spinner" />Checking…</div></AccessFrame>;
-  if (status === "accepted") return <AccessFrame eyebrow="Invitation accepted" title="You’re in" description="This workspace is now available from your account."><Link className="button button-primary" href="/dashboard">Open SnagTime</Link></AccessFrame>;
+  if (status === "accepted") return <AccessFrame eyebrow="Invitation accepted" title="You’re in" description="This workspace is now available from your account."><Link className="button button-primary" href="/dashboard">Open SCALA Booking</Link></AccessFrame>;
   if (status === "login") return <AccessFrame eyebrow="Workspace invitation" title="Sign in to continue" description="Use the verified account matching the invitation. The authority remains only in this page’s memory."><form onSubmit={login}><label>Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label>{error && <div className="form-error" role="alert">{error}</div>}<button className="button button-primary" type="submit">Sign in and accept</button></form></AccessFrame>;
   return <AccessFrame eyebrow="Unable to accept" title="This invitation cannot be used" description="Invitation links are bound to a verified account, single-use, and expire."><div className="form-error" role="alert">{error}</div><Link className="button button-secondary" href="/dashboard">Go to sign in</Link></AccessFrame>;
 }

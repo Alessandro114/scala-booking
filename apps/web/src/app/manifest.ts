@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SnagTime",
-    short_name: "SnagTime",
+    name: "SCALA Booking",
+    short_name: "SCALA Booking",
     description: "Snag a time. Get booked.",
     start_url: "/dashboard",
     display: "standalone",

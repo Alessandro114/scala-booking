@@ -92,7 +92,7 @@ async function render(row: { kind: string; workspaceId: string; bookingId: strin
     const binding = accountTokenBinding(record.workspaceId, record.userId, record.email); const token = materializeActionToken(record.id, record.purpose, binding);
     if (!tokenHashMatches(actionTokenHash(token, record.purpose, binding), record.tokenHash)) return null;
     const path = row.kind === "EMAIL_VERIFY" ? "/verify-email" : "/reset-password";
-    return { subject: row.subjectSnapshot, text: `${row.kind === "EMAIL_VERIFY" ? "Verify your SnagTime email" : "Reset your SnagTime password"}: ${base}${path}#token=${encodeURIComponent(token)}` };
+    return { subject: row.subjectSnapshot, text: `${row.kind === "EMAIL_VERIFY" ? "Verify your SCALA Booking email" : "Reset your SCALA Booking password"}: ${base}${path}#token=${encodeURIComponent(token)}` };
   }
   if (row.kind === "WORKSPACE_INVITATION") {
     const invitation = await db.workspaceInvitation.findUnique({ where: { id: String(payload.invitationId) } });
