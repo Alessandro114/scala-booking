@@ -85,7 +85,7 @@ export function SettingsView() {
     try {
       const user = await frontendApi.updateProfileImage({ imageUrl });
       setAccount((current) => current ? { ...current, user } : current);
-      window.dispatchEvent(new CustomEvent("snagtime:profile-image", { detail: user }));
+      window.dispatchEvent(new CustomEvent("scala-booking:profile-image", { detail: user }));
       setProfileMessage(imageUrl ? "Profile photo updated." : "Profile photo removed. Initials are shown instead.");
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Could not update your profile photo."); }
     finally { setProfileProcessing(false); if (profileInputRef.current) profileInputRef.current.value = ""; }
@@ -106,7 +106,7 @@ export function SettingsView() {
       if (editRevision.current !== submittedRevision) return;
       setBranding(persisted); setDirty(false);
       setAccount((current) => current ? { ...current, workspace: { ...current.workspace, name: persisted.workspaceName }, workspaces: current.workspaces.map((workspace) => workspace.id === current.workspace.id ? { ...workspace, name: persisted.workspaceName } : workspace) } : current);
-      window.dispatchEvent(new CustomEvent("snagtime:workspace-branding", { detail: { workspaceName: persisted.workspaceName, logoUrl: persisted.logoUrl } }));
+      window.dispatchEvent(new CustomEvent("scala-booking:workspace-branding", { detail: { workspaceName: persisted.workspaceName, logoUrl: persisted.logoUrl } }));
       setSaved(true); window.setTimeout(() => setSaved(false), 2200);
     }
     catch (reason) { setError(reason instanceof Error ? reason.message : "Could not save workspace settings."); }

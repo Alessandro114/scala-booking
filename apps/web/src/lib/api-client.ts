@@ -26,7 +26,7 @@ import type {
   ResumeBookingCheckoutResult,
 } from "@/lib/contracts";
 
-export class SnagTimeApiError extends Error {
+export class BookingApiError extends Error {
   constructor(
     public readonly code: string,
     message: string,
@@ -45,12 +45,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const body = (await response.json()) as ApiResponse<T>;
   if (!response.ok || "error" in body) {
     const error = (body as ApiFailure).error;
-    throw new SnagTimeApiError(error.code, error.message, response.status, error.fieldErrors);
+    throw new BookingApiError(error.code, error.message, response.status, error.fieldErrors);
   }
   return body.data;
 }
 
-export const snagTimeApi = {
+export const scalaBookingApi = {
   session: () => request<{ user: SessionUser | null; workspace: AccountSummary["workspace"] | null }>("/api/auth/session"),
   login: (email: string, password: string) => request<{ user: SessionUser }>("/api/auth/session", { method: "POST", body: JSON.stringify({ email, password }) }),
   demoLogin: (email: string, password: string) => request<{ user: SessionUser }>("/api/auth/session", { method: "POST", body: JSON.stringify({ email, password }) }),

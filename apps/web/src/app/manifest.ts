@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "SCALA Booking",
     short_name: "SCALA Booking",
-    description: "Snag a time. Get booked.",
+    description: "Smart scheduling for your SCALA workspace.",
     start_url: "/dashboard",
     display: "standalone",
     background_color: "#F5F8FC",

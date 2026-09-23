@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { SnagTimeApiError } from "@/lib/api-client";
+import { BookingApiError } from "@/lib/api-client";
 import { frontendApi } from "./api-adapter";
 import { claimOneUseLinkAuthority, shareOneUseAction } from "./one-use-link-authority";
 import { BrandMark } from "./ui";
@@ -100,7 +100,7 @@ export function AcceptInvitationView() {
     setStatus("working"); setError("");
     try { await shareOneUseAction("workspace-invitation", authority.current, () => frontendApi.acceptWorkspaceInvitation(authority.current)); setStatus("accepted"); }
     catch (reason) {
-      if (reason instanceof SnagTimeApiError && reason.status === 401) { setStatus("login"); return; }
+      if (reason instanceof BookingApiError && reason.status === 401) { setStatus("login"); return; }
       setError(reason instanceof Error ? reason.message : "This invitation is invalid or expired."); setStatus("error");
     }
   }, []);

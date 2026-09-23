@@ -1,6 +1,6 @@
 "use client";
 
-import { snagTimeApi } from "@/lib/api-client";
+import { scalaBookingApi } from "@/lib/api-client";
 import type { AvailabilityOverride, AvailabilitySchedule, BookingSlot, BookingSummary, CreateEventTypeInput, EventTypeSummary } from "@/lib/contracts";
 import type { AvailabilityDay, Booking, EventType } from "./demo-data";
 
@@ -111,57 +111,57 @@ export function mapBooking(item: BookingSummary, organizerTimeZone = item.invite
 }
 
 export const frontendApi = {
-  session: snagTimeApi.session,
-  login: snagTimeApi.login,
-  logout: snagTimeApi.logout,
-  signup: snagTimeApi.signup,
-  requestPasswordReset: snagTimeApi.requestPasswordReset,
-  resetPassword: snagTimeApi.resetPassword,
-  requestEmailVerification: snagTimeApi.requestEmailVerification,
-  verifyEmail: snagTimeApi.verifyEmail,
-  getAccount: snagTimeApi.getAccount,
-  updateProfileImage: snagTimeApi.updateProfileImage,
-  changePassword: snagTimeApi.changePassword,
-  completeOnboarding: snagTimeApi.completeOnboarding,
-  switchWorkspace: snagTimeApi.switchWorkspace,
-  listWorkspaceMembers: snagTimeApi.listWorkspaceMembers,
-  updateWorkspaceMember: snagTimeApi.updateWorkspaceMember,
-  listWorkspaceInvitations: snagTimeApi.listWorkspaceInvitations,
-  createWorkspaceInvitation: snagTimeApi.createWorkspaceInvitation,
-  acceptWorkspaceInvitation: snagTimeApi.acceptWorkspaceInvitation,
+  session: scalaBookingApi.session,
+  login: scalaBookingApi.login,
+  logout: scalaBookingApi.logout,
+  signup: scalaBookingApi.signup,
+  requestPasswordReset: scalaBookingApi.requestPasswordReset,
+  resetPassword: scalaBookingApi.resetPassword,
+  requestEmailVerification: scalaBookingApi.requestEmailVerification,
+  verifyEmail: scalaBookingApi.verifyEmail,
+  getAccount: scalaBookingApi.getAccount,
+  updateProfileImage: scalaBookingApi.updateProfileImage,
+  changePassword: scalaBookingApi.changePassword,
+  completeOnboarding: scalaBookingApi.completeOnboarding,
+  switchWorkspace: scalaBookingApi.switchWorkspace,
+  listWorkspaceMembers: scalaBookingApi.listWorkspaceMembers,
+  updateWorkspaceMember: scalaBookingApi.updateWorkspaceMember,
+  listWorkspaceInvitations: scalaBookingApi.listWorkspaceInvitations,
+  createWorkspaceInvitation: scalaBookingApi.createWorkspaceInvitation,
+  acceptWorkspaceInvitation: scalaBookingApi.acceptWorkspaceInvitation,
   async listEventTypes() {
-    return (await snagTimeApi.listEventTypes()).map(mapEventType);
+    return (await scalaBookingApi.listEventTypes()).map(mapEventType);
   },
   async getEventType(id: string) {
-    return mapEventType(await snagTimeApi.getEventType(id));
+    return mapEventType(await scalaBookingApi.getEventType(id));
   },
   async saveEventType(event: EventType, mode: "edit" | "create", publish: boolean) {
     const input = toEventInput({ ...event, status: publish ? "published" : event.status });
-    const saved = mode === "create" ? await snagTimeApi.createEventType(input) : await snagTimeApi.updateEventType(event.id, input);
+    const saved = mode === "create" ? await scalaBookingApi.createEventType(input) : await scalaBookingApi.updateEventType(event.id, input);
     return mapEventType(saved);
   },
-  async deleteEventType(id: string) { return snagTimeApi.deleteEventType(id); },
-  async getAvailability() { const schedule = await snagTimeApi.getAvailability(); return { days: mapAvailability(schedule), timeZone: schedule.timeZone, overrides: schedule.overrides ?? [] }; },
-  async saveAvailability(days: AvailabilityDay[], timeZone: string, overrides: AvailabilityOverride[]) { const schedule = await snagTimeApi.setAvailability({ ...toAvailability(days, timeZone), overrides }); return { days: mapAvailability(schedule), timeZone: schedule.timeZone, overrides: schedule.overrides ?? [] }; },
-  async listBookings(organizerTimeZone?: string) { return (await snagTimeApi.listBookings()).map((item) => mapBooking(item, organizerTimeZone)); },
-  async getPublicEvent(slug: string) { return mapEventType(await snagTimeApi.getPublicEventType(slug)); },
-  async getSlots(slug: string, from: string, to: string, timeZone: string, durationId?: string, signal?: AbortSignal): Promise<BookingSlot[]> { return snagTimeApi.getSlots(slug, from, to, timeZone, durationId, signal); },
-  createBooking: snagTimeApi.createBooking,
-  resumeBookingCheckout: snagTimeApi.resumeBookingCheckout,
-  exchangeBookingManageSession: snagTimeApi.exchangeBookingManageSession,
-  acknowledgeBookingManageSession: snagTimeApi.acknowledgeBookingManageSession,
-  getBookingForManage: snagTimeApi.getBookingForManage,
-  getRescheduleSlots: snagTimeApi.getRescheduleSlots,
-  rescheduleBooking: snagTimeApi.rescheduleBooking,
-  cancelBooking: snagTimeApi.cancelBooking,
-  requestBookingManageLink: snagTimeApi.requestBookingManageLink,
-  consumeBookingManageLink: snagTimeApi.consumeBookingManageLink,
-  getWorkspaceBranding: snagTimeApi.getWorkspaceBranding,
-  updateWorkspaceBranding: snagTimeApi.updateWorkspaceBranding,
-  getIntegrationStatus: snagTimeApi.getIntegrationStatus,
-  getGoogleStatus: snagTimeApi.getGoogleStatus,
-  disconnectGoogle: snagTimeApi.disconnectGoogle,
-  googleAuthorizePath: snagTimeApi.googleAuthorizePath,
-  listLocalEmailInbox: snagTimeApi.listLocalEmailInbox,
-  retryEmailOutbox: snagTimeApi.retryEmailOutbox,
+  async deleteEventType(id: string) { return scalaBookingApi.deleteEventType(id); },
+  async getAvailability() { const schedule = await scalaBookingApi.getAvailability(); return { days: mapAvailability(schedule), timeZone: schedule.timeZone, overrides: schedule.overrides ?? [] }; },
+  async saveAvailability(days: AvailabilityDay[], timeZone: string, overrides: AvailabilityOverride[]) { const schedule = await scalaBookingApi.setAvailability({ ...toAvailability(days, timeZone), overrides }); return { days: mapAvailability(schedule), timeZone: schedule.timeZone, overrides: schedule.overrides ?? [] }; },
+  async listBookings(organizerTimeZone?: string) { return (await scalaBookingApi.listBookings()).map((item) => mapBooking(item, organizerTimeZone)); },
+  async getPublicEvent(slug: string) { return mapEventType(await scalaBookingApi.getPublicEventType(slug)); },
+  async getSlots(slug: string, from: string, to: string, timeZone: string, durationId?: string, signal?: AbortSignal): Promise<BookingSlot[]> { return scalaBookingApi.getSlots(slug, from, to, timeZone, durationId, signal); },
+  createBooking: scalaBookingApi.createBooking,
+  resumeBookingCheckout: scalaBookingApi.resumeBookingCheckout,
+  exchangeBookingManageSession: scalaBookingApi.exchangeBookingManageSession,
+  acknowledgeBookingManageSession: scalaBookingApi.acknowledgeBookingManageSession,
+  getBookingForManage: scalaBookingApi.getBookingForManage,
+  getRescheduleSlots: scalaBookingApi.getRescheduleSlots,
+  rescheduleBooking: scalaBookingApi.rescheduleBooking,
+  cancelBooking: scalaBookingApi.cancelBooking,
+  requestBookingManageLink: scalaBookingApi.requestBookingManageLink,
+  consumeBookingManageLink: scalaBookingApi.consumeBookingManageLink,
+  getWorkspaceBranding: scalaBookingApi.getWorkspaceBranding,
+  updateWorkspaceBranding: scalaBookingApi.updateWorkspaceBranding,
+  getIntegrationStatus: scalaBookingApi.getIntegrationStatus,
+  getGoogleStatus: scalaBookingApi.getGoogleStatus,
+  disconnectGoogle: scalaBookingApi.disconnectGoogle,
+  googleAuthorizePath: scalaBookingApi.googleAuthorizePath,
+  listLocalEmailInbox: scalaBookingApi.listLocalEmailInbox,
+  retryEmailOutbox: scalaBookingApi.retryEmailOutbox,
 };

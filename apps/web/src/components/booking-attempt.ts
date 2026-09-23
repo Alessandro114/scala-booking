@@ -3,7 +3,7 @@ import type { CreateBookingInput } from "@/lib/contracts";
 type StoredBookingAttempt = { fingerprint: string; key: string; bookingId?: string };
 
 function storageKey(slug: string) {
-  return `snagtime:booking-attempt:${slug}`;
+  return `scala-booking:booking-attempt:${slug}`;
 }
 
 function legacyStorageKey(slug: string) {

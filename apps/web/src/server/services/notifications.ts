@@ -141,7 +141,7 @@ export class SmtpEmailProvider implements EmailProvider {
   async send(message: EmailDelivery, signal?: AbortSignal) {
     if (signal?.aborted) throw new Error("SMTP_DELIVERY_ABORTED");
     const identity = createHash("sha256").update(`tempocove-email-v1\0${message.idempotencyKey}`).digest("hex");
-    await this.transport.sendMail({ from: this.from, to: validatedMailbox(message.recipientEmail), replyTo: validatedMailbox(message.replyTo || this.systemReplyTo), subject: message.subject, text: message.text, messageId: `<${identity}@snagtime.invalid>`, headers: { "X-SnagTime-Dedupe": identity } });
+    await this.transport.sendMail({ from: this.from, to: validatedMailbox(message.recipientEmail), replyTo: validatedMailbox(message.replyTo || this.systemReplyTo), subject: message.subject, text: message.text, messageId: `<${identity}@book.get-scala.com>`, headers: { "X-Booking-Dedupe": identity } });
     // Once SMTP acknowledges the deterministic message id, commit SENT even if shutdown starts.
     // Retrying after an accepted response would create a duplicate external delivery.
   }

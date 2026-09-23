@@ -6,11 +6,11 @@ import "../styles/globals.css";
 
 export const metadata: Metadata = {
   title: { default: "SCALA Booking", template: "%s · SCALA Booking" },
-  description: "Snag a time. Get booked.",
+  description: "Smart scheduling for your SCALA workspace.",
   applicationName: "SCALA Booking",
   icons: { icon: "/icon.svg" },
   manifest: "/manifest.webmanifest",
-  openGraph: { title: "SCALA Booking", description: "Snag a time. Get booked.", type: "website" },
+  openGraph: { title: "SCALA Booking", description: "Smart scheduling for your SCALA workspace.", type: "website" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

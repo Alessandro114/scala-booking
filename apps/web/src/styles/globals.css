@@ -61,7 +61,7 @@ a:focus-visible,button:focus-visible,[role=button]:focus-visible,[role=tab]:focu
 @media(max-width:540px){.metric-grid{gap:0}.metric-card{min-height:126px;padding:17px 16px}.metric-card+.metric-card{border-left:1px solid var(--line)}.metric-card:nth-child(3){border-left:0}.metric-icon{top:15px;right:15px;width:27px;height:27px}.metric-card>strong{font-size:26px}.integration-mark,.integration-mark svg{width:40px;height:40px}}
 .sidebar .sidebar-profile .avatar{color:#bfdbfe}.metric-detail{color:#5d696c}
 
-/* SnagTime identity: fast, clear scheduling with a confident blue system. */
+/* SCALA Booking identity: fast, clear scheduling with a confident blue system. */
 :root{--ink:#10213d;--muted:#52627a;--subtle:#5b6b82;--line:#dce5f1;--line-strong:#c8d5e6;--surface:#fff;--canvas:#f5f8fc;--brand:#2563eb;--brand-dark:#1d4ed8;--brand-soft:#eaf2ff;--blue:#2563eb;--blue-soft:#eaf2ff;--shadow:0 1px 2px rgba(15,35,68,.04);--shadow-lg:0 20px 55px rgba(15,35,68,.14)}
 .brand-mark{width:32px;height:32px;border-radius:0;background:transparent!important;color:var(--brand);overflow:visible}.brand-mark svg{width:32px;height:32px}.brand-name{color:var(--ink);font-size:18px;font-weight:790;letter-spacing:-.045em}
 .button.button-primary{background:var(--brand);border-color:var(--brand);color:#fff}.button.button-primary:hover:not(:disabled){background:#1e4fc2;border-color:#1e4fc2}.button.button-primary:disabled{background:#dbeafe;border-color:#dbeafe;color:#1e40af}.button-primary{box-shadow:0 5px 14px rgba(37,99,235,.2)}
