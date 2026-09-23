@@ -2,7 +2,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypt
 import type { Membership, User, Workspace } from "@prisma/client";
 import { db } from "@/server/db";
 import { AppError, unauthorized } from "@/server/errors";
-import { enterDatabaseContext } from "@/server/db-context";
+import { currentDatabaseContext, enterDatabaseContext } from "@/server/db-context";
 import { systemEmailIdentity } from "@/server/email-config";
 
 export const SESSION_COOKIE = "tempocove_session";
@@ -79,7 +79,7 @@ export async function getSessionRecord(request: Request) {
     where: { tokenHash, userId: session.userId, revokedAt: null, expiresAt: { gt: new Date() }, membership: { status: "ACTIVE", userId: session.userId } },
     include: { user: true, membership: true, workspace: true },
   });
-  if (record) enterDatabaseContext({ mode: "workspace", workspaceId: record.activeWorkspaceId, userId: record.userId, sessionHash: tokenHash, subject: record.membership.role,action:"workspace_read" });
+  if (record) { const workspaceContext = { mode: "workspace" as const, workspaceId: record.activeWorkspaceId, userId: record.userId, sessionHash: tokenHash, subject: record.membership.role, action: "workspace_read" }; const shared = currentDatabaseContext(); if (shared) Object.assign(shared, workspaceContext); else enterDatabaseContext(workspaceContext); }
   return record || null;
 }
 
