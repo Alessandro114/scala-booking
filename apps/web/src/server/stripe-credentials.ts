@@ -13,7 +13,7 @@ export function claimableStripeSandboxEnabled(environment: NodeJS.ProcessEnv = p
 
 export function stripeSecretKeyAllowed(secretKey = process.env.STRIPE_SECRET_KEY, environment: NodeJS.ProcessEnv = process.env) {
   const kind = classifyStripeSecretKey(secretKey);
-  return kind === "standard_test" || (kind === "claimable_sandbox" && claimableStripeSandboxEnabled(environment));
+  return kind === "standard_test" || kind === "live" || (kind === "claimable_sandbox" && claimableStripeSandboxEnabled(environment));
 }
 
 export function stripeCredentialSetReady(secretKey = process.env.STRIPE_SECRET_KEY, requireWebhook = true, environment: NodeJS.ProcessEnv = process.env) {

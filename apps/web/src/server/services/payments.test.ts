@@ -11,16 +11,42 @@ describe("payment provider boundary", () => {
     process.env.CALENDAR_PROVIDER = "local";
   });
   afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); delete process.env.STRIPE_SECRET_KEY; delete process.env.STRIPE_WEBHOOK_SECRET; delete process.env.CALENDAR_PROVIDER; delete process.env.STRIPE_CLAIMABLE_SANDBOX; delete process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY; delete process.env.DEMO_MODE; });
-  it("rejects live Stripe credentials in the POC", () => {
-    expect(() => new StripeTestPaymentService("sk_live_forbidden")).toThrow(/test-mode/);
-    expect(() => new StripeTestPaymentService("")).toThrow(/test-mode/);
+  it("accepts live keys but rejects missing or malformed credentials", () => {
+    expect(() => new StripeTestPaymentService("sk_live_configured", {} as unknown as Stripe)).not.toThrow();
+    expect(() => new StripeTestPaymentService("")).toThrow(/authorized Stripe credential set/);
+    expect(() => new StripeTestPaymentService("pk_live_wrong_kind")).toThrow(/authorized Stripe credential set/);
+  });
+
+  it("enforces mode consistency: a live key never acts on test objects and a test key never on live ones", async () => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date("2030-01-01T00:00:00Z"));
+    const booking = { id: "b-mode", workspaceId: "w", durationId: "d", durationMinutes: 30, inviteeEmail: "g@example.invalid", priceCents: 2500, currency: "usd", stripePaymentIntentId: "pi_mode", checkoutResumeExpiresAt: new Date(Date.now() + 3 * 3_600_000) } as unknown as Booking;
+    const eventType = { id: "e", slug: "s", name: "S" } as EventType;
+    const build = (livemode: boolean, key: string) => {
+      const stripe = { checkout: { sessions: { create: vi.fn().mockResolvedValue({ id: "cs_x", url: "https://x.test", livemode }), retrieve: vi.fn().mockResolvedValue({ status: "open", livemode }), expire: vi.fn() } }, paymentIntents: { retrieve: vi.fn().mockResolvedValue({ id: "pi_mode", livemode, amount_received: 2500, currency: "usd" }) }, refunds: { create: vi.fn() } } as unknown as Stripe;
+      return { stripe, service: new StripeTestPaymentService(key, stripe) };
+    };
+    await expect(build(false, "sk_live_unit").service.createCheckout(booking, eventType)).rejects.toThrow("STRIPE_MODE_MISMATCH");
+    await expect(build(true, "sk_test_unit").service.createCheckout(booking, eventType)).rejects.toThrow("STRIPE_MODE_MISMATCH");
+    await expect(build(false, "sk_live_unit").service.expireCheckout("cs_x")).rejects.toThrow("STRIPE_MODE_MISMATCH");
+    await expect(build(true, "sk_test_unit").service.refundPayment(booking)).rejects.toThrow("STRIPE_REFUND_AUTHORITY_MISMATCH");
+    const live = build(true, "sk_live_unit");
+    await expect(live.service.createCheckout(booking, eventType)).resolves.toEqual({ sessionId: "cs_x", url: "https://x.test" });
+    const test = build(false, "sk_test_unit");
+    await expect(test.service.expireCheckout("cs_x")).resolves.toBeUndefined();
+  });
+
+  it("rejects webhook events whose livemode differs from the configured key", async () => {
+    process.env.STRIPE_SECRET_KEY = "sk_live_unit";
+    const body = JSON.stringify({ id: "evt_mode", object: "event", type: "customer.created", livemode: false, created: 1, data: { object: { id: "cus_1", object: "customer" } } });
+    const signature = Stripe.webhooks.generateTestHeaderString({ payload: body, secret: "whsec_unit" });
+    await expect(processStripeWebhook(body, signature)).rejects.toMatchObject({ code: "STRIPE_MODE_MISMATCH" });
   });
 
   it("constructs claimable-sandbox Stripe only behind the explicit nonproduction demo gate", () => {
     process.env.DEMO_MODE = "true"; process.env.STRIPE_CLAIMABLE_SANDBOX = "true"; process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_fixture";
     expect(() => new StripeTestPaymentService("rkcs_test_fixture")).not.toThrow();
     vi.stubEnv("NODE_ENV", "production");
-    expect(() => new StripeTestPaymentService("rkcs_test_fixture")).toThrow(/authorized Stripe test-mode/);
+    expect(() => new StripeTestPaymentService("rkcs_test_fixture")).toThrow(/authorized Stripe credential set/);
     vi.stubEnv("NODE_ENV", "test");
   });
 

@@ -5,7 +5,7 @@ import { enqueueBookingEmail } from "@/server/services/notifications";
 import { db } from "@/server/db";
 import { AppError } from "@/server/errors";
 import { enterProviderDatabaseContext } from "@/server/db-context";
-import { stripeCredentialSetReady, stripeTestConfigurationReady } from "@/server/stripe-credentials";
+import { stripeCredentialSetReady, stripeTestConfigurationReady, classifyStripeSecretKey } from "@/server/stripe-credentials";
 import { shouldDrainOutboxInline } from "@/server/services/outbox-dispatch";
 
 export type CheckoutResult = { sessionId: string; url: string | null };
@@ -25,6 +25,10 @@ export class StubPaymentService implements PaymentService {
   async refundPayment(): Promise<RefundResult> { throw new AppError("PAYMENTS_NOT_CONFIGURED", "Payments are not configured for this refund.", 503); }
 }
 
+// Mode-consistency rail: live keys are allowed, but every Stripe object we act on must have the same
+// livemode as the configured secret key (a test key never touches live objects and vice versa).
+function stripeKeyIsLive(secretKey = process.env.STRIPE_SECRET_KEY) { return classifyStripeSecretKey(secretKey) === "live"; }
+
 export function assertPaidBookingsConfigured() {
   if (!stripeTestConfigurationReady()) {
     throw new AppError("PAYMENTS_NOT_CONFIGURED", "Stripe test mode must be configured before publishing a paid event type.", 503);
@@ -33,8 +37,10 @@ export function assertPaidBookingsConfigured() {
 
 export class StripeTestPaymentService implements PaymentService {
   private readonly stripe: Stripe;
+  private readonly live: boolean;
   constructor(secretKey = process.env.STRIPE_SECRET_KEY, stripeClient?: Stripe) {
-    if (!stripeCredentialSetReady(secretKey, false)) throw new Error("SnagTime only accepts a complete authorized Stripe test-mode credential set.");
+    if (!stripeCredentialSetReady(secretKey, false)) throw new Error("SCALA Booking only accepts a complete authorized Stripe credential set.");
+    this.live = stripeKeyIsLive(secretKey);
     this.stripe = stripeClient ?? new Stripe(secretKey!);
   }
 
@@ -52,20 +58,20 @@ export class StripeTestPaymentService implements PaymentService {
       expires_at: Math.floor(Math.min(booking.checkoutResumeExpiresAt.getTime(), Date.now() + (23 * 60 + 55) * 60_000) / 1000),
       line_items: [{ quantity: 1, price_data: { currency: booking.currency, unit_amount: booking.priceCents, product_data: { name: `${eventType.name} (${booking.durationMinutes} min)` } } }],
     }, { idempotencyKey: `booking:${booking.id}:checkout:v2` });
-    if (session.livemode) throw new Error("Stripe returned a live-mode Checkout Session.");
+    if (session.livemode !== this.live) throw new Error("STRIPE_MODE_MISMATCH");
     return { sessionId: session.id, url: session.url };
   }
 
   async expireCheckout(sessionId: string) {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
-    if (session.livemode) throw new Error("Refusing to mutate a live-mode Checkout Session.");
+    if (session.livemode !== this.live) throw new Error("STRIPE_MODE_MISMATCH");
     if (session.status === "open") await this.stripe.checkout.sessions.expire(sessionId);
   }
 
   async refundPayment(booking: Booking): Promise<RefundResult> {
     if (!booking.stripePaymentIntentId || booking.priceCents <= 0) throw new Error("STRIPE_REFUND_AUTHORITY_REQUIRED");
     const intent = await this.stripe.paymentIntents.retrieve(booking.stripePaymentIntentId);
-    if (intent.livemode || intent.id !== booking.stripePaymentIntentId || intent.amount_received !== booking.priceCents || intent.currency.toLowerCase() !== booking.currency.toLowerCase()) {
+    if (intent.livemode !== this.live || intent.id !== booking.stripePaymentIntentId || intent.amount_received !== booking.priceCents || intent.currency.toLowerCase() !== booking.currency.toLowerCase()) {
       throw new Error("STRIPE_REFUND_AUTHORITY_MISMATCH");
     }
     const refund = await this.stripe.refunds.create({
@@ -97,14 +103,14 @@ function checkoutCharge(session: Stripe.Checkout.Session) {
   return typeof session.payment_intent === "object" && session.payment_intent && "latest_charge" in session.payment_intent
     ? providerId(session.payment_intent.latest_charge as string | { id: string } | null) : null;
 }
-async function resolveCheckoutAuthority(stripe: Stripe, session: Stripe.Checkout.Session) {
+async function resolveCheckoutAuthority(stripe: Stripe, session: Stripe.Checkout.Session, live: boolean) {
   const paymentIntentId = checkoutPaymentIntent(session);
   if (!paymentIntentId) throw new AppError("INVALID_STRIPE_PAYMENT", "Stripe payment authority is missing.", 400);
   const embeddedChargeId = checkoutCharge(session);
   if (embeddedChargeId) return { paymentIntentId, chargeId: embeddedChargeId };
   const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
   const chargeId = providerId(intent.latest_charge);
-  if (intent.livemode || intent.id !== paymentIntentId || intent.status !== "succeeded" || intent.amount_received !== session.amount_total || intent.currency.toLowerCase() !== session.currency?.toLowerCase() || !chargeId) {
+  if (intent.livemode !== live || intent.id !== paymentIntentId || intent.status !== "succeeded" || intent.amount_received !== session.amount_total || intent.currency.toLowerCase() !== session.currency?.toLowerCase() || !chargeId) {
     throw new AppError("INVALID_STRIPE_PAYMENT", "Stripe payment authority does not match the Checkout Session.", 400);
   }
   return { paymentIntentId, chargeId };
@@ -114,12 +120,13 @@ const refundEventTypes = new Set(["refund.created", "refund.updated", "refund.fa
 export async function processStripeWebhook(rawBody: string, signature: string) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!stripeCredentialSetReady(secretKey, true) || !webhookSecret) throw new Error("Stripe test webhook credentials are not configured.");
+  if (!stripeCredentialSetReady(secretKey, true) || !webhookSecret) throw new Error("Stripe webhook credentials are not configured.");
+  const live = stripeKeyIsLive(secretKey);
   const stripe = new Stripe(secretKey!);
   const event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-  if (event.livemode) throw new AppError("LIVE_STRIPE_EVENT_REJECTED", "Live Stripe events are not accepted.", 400);
+  if (event.livemode !== live) throw new AppError("STRIPE_MODE_MISMATCH", "Stripe event mode does not match the configured credentials.", 400);
   const checkoutAuthority = event.type === "checkout.session.completed"
-    ? await resolveCheckoutAuthority(stripe, event.data.object as Stripe.Checkout.Session)
+    ? await resolveCheckoutAuthority(stripe, event.data.object as Stripe.Checkout.Session, live)
     : null;
   const payloadHash = createHash("sha256").update(rawBody).digest("hex");
   const providerObject = event.data.object as Stripe.Checkout.Session | Stripe.Refund;
@@ -156,7 +163,7 @@ export async function processStripeWebhook(rawBody: string, signature: string) {
       }
       if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.expired") return;
       const session = event.data.object as Stripe.Checkout.Session;
-      if (session.livemode || !session.client_reference_id) throw new AppError("INVALID_STRIPE_SESSION", "Stripe session binding is invalid.", 400);
+      if (session.livemode !== live || !session.client_reference_id) throw new AppError("INVALID_STRIPE_SESSION", "Stripe session binding is invalid.", 400);
       const booking = await tx.booking.findUnique({ where: { id: session.client_reference_id } });
       if (!booking || booking.stripeCheckoutSessionId !== session.id ||
         session.metadata?.bookingId !== booking.id || session.metadata?.eventTypeId !== booking.eventTypeId ||

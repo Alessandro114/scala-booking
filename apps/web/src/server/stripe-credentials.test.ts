@@ -17,11 +17,12 @@ describe("Stripe credential classification", () => {
     vi.stubEnv("STRIPE_CLAIMABLE_SANDBOX", "false"); expect(stripeSecretKeyAllowed("rkcs_test_fixture")).toBe(false);
   });
 
-  it("rejects rkcs and every live credential in production even when demo flags are forged", () => {
+  it("rejects rkcs in production even when demo flags are forged, while live keys are allowed by policy", () => {
     vi.stubEnv("NODE_ENV", "production"); vi.stubEnv("DEMO_MODE", "true"); vi.stubEnv("STRIPE_CLAIMABLE_SANDBOX", "true");
     expect(stripeSecretKeyAllowed("rkcs_test_fixture")).toBe(false);
-    expect(stripeSecretKeyAllowed("sk_live_forbidden")).toBe(false);
-    expect(stripeSecretKeyAllowed("rk_live_forbidden")).toBe(false);
+    expect(stripeSecretKeyAllowed("sk_live_configured")).toBe(true);
+    expect(stripeSecretKeyAllowed("rk_live_configured")).toBe(true);
+    expect(stripeSecretKeyAllowed("pk_live_publishable_not_secret")).toBe(false);
     expect(stripeSecretKeyAllowed("sk_test_fixture")).toBe(true);
   });
 
