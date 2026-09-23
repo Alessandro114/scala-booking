@@ -19,7 +19,9 @@ export function apiError(error: unknown) {
       { status: error.status },
     );
   }
-  console.error("Unhandled API error", { type: error instanceof Error ? error.name : "unknown" });
+  const detail = error as { code?: unknown; meta?: unknown; message?: unknown };
+  const lastLine = typeof detail?.message === "string" ? detail.message.trim().split("\n").filter(Boolean).pop()?.slice(0, 300) : undefined;
+  console.error("Unhandled API error", { type: error instanceof Error ? error.name : "unknown", code: typeof detail?.code === "string" ? detail.code : undefined, meta: detail?.meta && typeof detail.meta === "object" ? detail.meta : undefined, reason: lastLine });
   return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Something went wrong." } }, { status: 500 });
 }
 
