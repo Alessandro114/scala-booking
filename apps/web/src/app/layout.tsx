@@ -15,8 +15,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
+        {/* Framed inside another site (SCALA /booking): mark <html> before first paint so the
+            organizer navigation can be hidden without a flash; SCALA provides its own navigation. */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(window.self!==window.top)document.documentElement.setAttribute("data-embedded","1")}catch(e){document.documentElement.setAttribute("data-embedded","1")}` }} />
         {/* GA4 — inline in <head> so it fires on the initial SSR response,
             not gated behind hydration (afterInteractive Script would miss
             hits on slow-hydrating first loads). Stream created 18/09/2026,
