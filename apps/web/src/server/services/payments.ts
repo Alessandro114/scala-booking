@@ -49,7 +49,7 @@ export class StripeTestPaymentService implements PaymentService {
     if (!booking.checkoutResumeExpiresAt || booking.checkoutResumeExpiresAt.getTime() - Date.now() < 30 * 60_000) throw new Error("CHECKOUT_RESUME_EXPIRED");
     const urls = stripeCheckoutReturnUrls(booking, eventType);
     const session = await this.stripe.checkout.sessions.create({
-      mode: "payment", payment_method_types: ["card"], wallet_options: { link: { display: "never" } }, customer_email: booking.inviteeEmail, client_reference_id: booking.id,
+      mode: "payment", wallet_options: { link: { display: "never" } }, customer_email: booking.inviteeEmail, client_reference_id: booking.id,
       success_url: urls.successUrl,
       cancel_url: urls.cancelUrl,
       metadata: { bookingId: booking.id, eventTypeId: eventType.id, durationId: booking.durationId ?? "" },

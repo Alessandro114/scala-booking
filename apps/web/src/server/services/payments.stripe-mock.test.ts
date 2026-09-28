@@ -9,15 +9,7 @@ const port = Number(process.env.STRIPE_MOCK_PORT || 0);
 const d = port ? describe : describe.skip;
 
 d("payments against stripe-mock (spec-validated Stripe API)", () => {
-  const client = (dropPaymentMethodTypes = true) => {
-    const stripe = new Stripe("sk_test_mock", { host: "127.0.0.1", port, protocol: "http", maxNetworkRetries: 0 });
-    if (!dropPaymentMethodTypes) return stripe;
-    // stripe-mock's spec (2026-09) no longer lists payment_method_types for Checkout, while the pinned SDK API
-    // version (2026-07-29.dahlia) still does. Everything else is validated; the divergence has its own test below.
-    const create = stripe.checkout.sessions.create.bind(stripe.checkout.sessions);
-    (stripe.checkout.sessions as { create: unknown }).create = (params: Stripe.Checkout.SessionCreateParams, options?: Stripe.RequestOptions) => create({ ...params, payment_method_types: undefined }, options);
-    return stripe;
-  };
+  const client = () => new Stripe("sk_test_mock", { host: "127.0.0.1", port, protocol: "http", maxNetworkRetries: 0 });
   const booking = () => ({ id: "b-mock", workspaceId: "w", durationId: "d", durationMinutes: 30, inviteeEmail: "guest@example.invalid", priceCents: 2500, currency: "usd", stripePaymentIntentId: "pi_mock", checkoutResumeExpiresAt: new Date(Date.now() + 3 * 3_600_000) } as unknown as Booking);
   const eventType = { id: "e", slug: "strategy-call", name: "Strategy Call" } as EventType;
 
@@ -29,11 +21,6 @@ d("payments against stripe-mock (spec-validated Stripe API)", () => {
     const result = await service.createCheckout(booking(), eventType);
     expect(result?.sessionId).toMatch(/^cs_/);
     expect(result?.url).toMatch(/^https:\/\//);
-  });
-
-  it("KNOWN DIVERGENCE: stripe-mock rejects payment_method_types — confirm against a real Stripe test key before bumping the SDK/API version", async () => {
-    const service = new StripeTestPaymentService("sk_test_unit", client(false));
-    await expect(service.createCheckout(booking(), eventType)).rejects.toThrow(/additional properties are not allowed/);
   });
 
   it("expires an open session through the API", async () => {
