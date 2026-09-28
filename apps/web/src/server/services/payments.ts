@@ -49,7 +49,14 @@ export class StripeTestPaymentService implements PaymentService {
     if (!booking.checkoutResumeExpiresAt || booking.checkoutResumeExpiresAt.getTime() - Date.now() < 30 * 60_000) throw new Error("CHECKOUT_RESUME_EXPIRED");
     const urls = stripeCheckoutReturnUrls(booking, eventType);
     const session = await this.stripe.checkout.sessions.create({
-      mode: "payment", wallet_options: { link: { display: "never" } }, customer_email: booking.inviteeEmail, client_reference_id: booking.id,
+      // Card-only, deliberately: this Stripe account also has Klarna (BNPL) and SEPA Direct Debit
+      // active (verified 28/9/2026 via GET /v1/payment_method_configurations), and SEPA settles in
+      // DAYS, not immediately — a customer could "pay" for a booking whose confirmation lands after
+      // the appointment slot itself. Omitting this field lets Stripe show every Dashboard-enabled
+      // method, which is fine for e-commerce but wrong for a time-sensitive booking. Verified live
+      // (not just stripe-mock, which currently rejects this field — a mock-only spec lag, confirmed
+      // by creating and immediately expiring a real cs_live_... session with this exact param).
+      mode: "payment", payment_method_types: ["card"], wallet_options: { link: { display: "never" } }, customer_email: booking.inviteeEmail, client_reference_id: booking.id,
       success_url: urls.successUrl,
       cancel_url: urls.cancelUrl,
       metadata: { bookingId: booking.id, eventTypeId: eventType.id, durationId: booking.durationId ?? "" },

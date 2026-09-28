@@ -79,10 +79,7 @@ describe("payment provider boundary", () => {
     const eventType = { id: "event-1", slug: "strategy-call", name: "Strategy Call" } as EventType;
     const service = new StripeTestPaymentService("sk_test_unit", stripe);
     await service.createCheckout(booking, eventType);
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({ mode: "payment", wallet_options: { link: { display: "never" } }, expires_at: Math.floor((Date.now() + (23 * 60 + 55) * 60_000) / 1000) }), { idempotencyKey: "booking:booking-card-only:checkout:v2" });
-    // payment_method_types is no longer sent (stripe-mock's current spec rejects it; Stripe now infers
-    // methods from the Dashboard's enabled payment methods). Link stays hidden via wallet_options above.
-    expect(create.mock.calls[0]?.[0]).not.toHaveProperty("payment_method_types");
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ mode: "payment", payment_method_types: ["card"], wallet_options: { link: { display: "never" } }, expires_at: Math.floor((Date.now() + (23 * 60 + 55) * 60_000) / 1000) }), { idempotencyKey: "booking:booking-card-only:checkout:v2" });
     expect(JSON.stringify(create.mock.calls[0])).not.toMatch(/afterpay|klarna|cashapp|us_bank_account/);
     await expect(service.refundPayment(booking)).resolves.toEqual({ refundId: "re_test_full", status: "succeeded", failureCode: null });
     expect(createRefund).toHaveBeenCalledWith(expect.objectContaining({ payment_intent: "pi_test_authority", amount: 2500, reason: "requested_by_customer" }), { idempotencyKey: "booking:booking-card-only:refund:full:v1" });
