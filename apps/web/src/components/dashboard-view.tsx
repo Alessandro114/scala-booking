@@ -7,6 +7,7 @@ import { frontendApi } from "./api-adapter";
 import { Icon } from "./icons";
 import { Avatar, Badge, ButtonLink, EmptyState, Metric, PageHeader, SectionHeader } from "./ui";
 import { useWorkspaceAccess } from "./workspace-access";
+import { START_PATH_ENABLED, StartPath } from "./start-path";
 
 function calendarMonthKey(value: Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit" }).formatToParts(value);
@@ -40,6 +41,7 @@ export function DashboardView() {
   return (
     <div className="page-stack">
       <PageHeader title="Scheduling overview" description={`Bookings shown in ${workspaceTimeZone}.`} actions={canManage ? <ButtonLink href="/event-types/new" icon="plus">Create event type</ButtonLink> : undefined} />
+      {START_PATH_ENABLED && canManage && <StartPath hasPublishedEvent={activeEvents.length > 0} hasBooking={bookings.some((booking) => booking.status !== "canceled")} />}
       <section className="metric-grid" aria-label="Booking overview">
         {metrics.map((metric) => <Metric key={metric.label} {...metric} />)}
       </section>
