@@ -74,3 +74,10 @@ a:focus-visible,button:focus-visible,[role=button]:focus-visible,[role=tab]:focu
 
 /* Embedded in SCALA (/booking): SCALA renders navigation and workspace context, hide sidebar and topbar. */
 html[data-embedded] .sidebar,html[data-embedded] .sidebar-scrim,html[data-embedded] .mobile-menu{display:none!important}html[data-embedded] .app-frame{margin-left:0!important}html[data-embedded] .topbar{display:none!important}html[data-embedded] .editor-topbar{top:0!important}html[data-embedded] .main-content{padding-top:24px}
+
+/* UX interne ott 2026: target minimo 44 px (regola di casa; WCAG 2.2 AA 2.5.8 richiede 24). Solo dimensioni, nessun cambio di marchio. */
+.icon-button{width:44px;height:44px}
+.button,.button-sm{min-height:44px}
+.sidebar-nav a,.sidebar-nav button{min-height:44px}
+.segmented button,.editor-tabs button,.editor-tabs a{min-height:44px}
+input:not([type=checkbox]):not([type=radio]):not([type=range]),select{min-height:44px}
